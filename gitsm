@@ -1,0 +1,148 @@
+#!/usr/bin/env python
+#
+# Copyright (c) 2017, Linaro Limited
+# All rights reserved.
+#
+# SPDX-License-Identifier: BSD-2-Clause
+
+import argparse
+import os
+import re
+import subprocess
+
+verbose = False
+
+def get_args():
+    parser = argparse.ArgumentParser(description=''
+            'Manage a cache of Git submodules. One use case for this command '
+            'is to create\n'
+            'multiple checkouts of the main project while minimizing the '
+            'network downloads\n'
+            'during the subsequent checkouts.\n\n'
+            'Example:\n\n'
+            '  mkdir ~/bin\n'
+            '  curl <this_file_url> >~/bin/gitsm\n'
+            '  chmod a+x ~/bin/gitsm\n'
+            '  export PATH=$PATH:~/bin\n\n'
+            '  git clone -b branch1 <project_url> ~/proj1\n'
+            '  cd ~/proj1\n'
+            '  gitsm cache\n'
+            '  gitsm update\n\n'
+            '  git clone -b branch2 <project_url> ~/proj2\n'
+            '  cd ~/proj2\n'
+            '  gitsm cache\n'
+            '  gitsm update\n\n',
+            formatter_class=argparse.RawDescriptionHelpFormatter)
+    subparsers = parser.add_subparsers()
+    parser_cache = subparsers.add_parser('cache',
+            help='Create or update Git repositories under CACHE_DIR. This '
+            'command runs \'git clone  --bare <submodule remote URL> '
+            '<submodule name>\' in the cache directory, or simply '
+            '\'git fetch\' if the repository already exists. Use '
+            '\'gitsm cache -h\' for options and details.')
+    parser_cache.set_defaults(func=cmd_cache)
+    parser_update = subparsers.add_parser('update',
+            help='Checkout submodules. A cache under CACHE_DIR is used, if it '
+            'exists. This command runs \'git submodule update --init '
+            '[--reference <cached Git>]. Use \'gitsm update -h\' for '
+            'options and details.')
+    parser_update.set_defaults(func=cmd_update)
+    for subparser in [parser_cache, parser_update]:
+        subparser.add_argument('-c', '--cache-dir', default='../gitcache',
+                help='Path to the cached Git repositories. Whem using the '
+                '\'cache\' command, the directory is created if it does not '
+                'exist. (default: %(default)s).')
+        subparser.add_argument('-v', '--verbose', action='store_true',
+                help='Print git commands as they are executed.')
+        subparser.add_argument('submodules', metavar='submodule', type=str,
+                nargs='*', help='The paths (directory names) of the '
+                'submodule(s) to cache or update. If empty, all the submodules '
+                'defined in .gitmodules are processed.')
+    return parser.parse_args()
+
+def subprocess_call(cmd, cwd='.'):
+    if verbose:
+        print '[' + ' '.join(cmd) + ']'
+    subprocess.call(cmd, cwd=cwd)
+
+def cache(cache_dir, sm_name, sm_url):
+    try:
+        os.makedirs(cache_dir)
+    except OSError:
+        if not os.path.isdir(cache_dir):
+            raise
+    git_dir = cache_dir + '/' + sm_name
+    if os.path.isdir(git_dir):
+        print 'Updating:', git_dir, '(' + sm_url + ')'
+        subprocess_call(['git', 'fetch'], cwd=git_dir)
+    else:
+        print 'Creating:', git_dir, '(' + sm_url + ')'
+        subprocess_call(['git', 'clone',  '--bare',  sm_url,  sm_name],
+                cwd=cache_dir)
+
+def cmd_cache(args):
+    name_re = re.compile('\[submodule "(?P<name>[^"]+)"')
+    path_re = re.compile('path = (?P<path>.+)')
+    url_re = re.compile('url = (?P<url>.+)')
+    name = ''
+    url = ''
+    path = ''
+    with open('.gitmodules', 'r') as gitmodules:
+        for line in gitmodules:
+            match = re.search(name_re, line)
+            if match:
+                name = match.group('name')
+            match = re.search(path_re, line)
+            if match:
+                path = match.group('path')
+            match = re.search(url_re, line)
+            if match:
+                url = match.group('url')
+            if name and url and path and (not args.submodules or
+                    path in args.submodules):
+                cache(args.cache_dir, name, url)
+                name = ''
+                url = ''
+                path = ''
+
+def update(cache_dir, sm_name, sm_path):
+    cmd = ['git', 'submodule', 'update', '--init']
+    git_dir = cache_dir + '/' + sm_name
+    print 'Updating submodule: \'' + sm_path +'\'',
+    if os.path.isdir(git_dir):
+        print ' (reference: ' + git_dir + ')'
+        cmd += ['--reference', git_dir]
+    else:
+        print
+    cmd += [sm_path]
+    subprocess_call(cmd)
+
+def cmd_update(args):
+    name_re = re.compile('\[submodule "(?P<name>[^"]+)"')
+    path_re = re.compile('path = (?P<path>.+)')
+    name = ''
+    path = ''
+    with open('.gitmodules', 'r') as gitmodules:
+        for line in gitmodules:
+            match = re.search(name_re, line)
+            if match:
+                name = match.group('name')
+            match = re.search(path_re, line)
+            if match:
+                path = match.group('path')
+
+            if path and name and (not args.submodules or path in args.submodules):
+                update(args.cache_dir, name, path)
+                name = ''
+                path = ''
+
+def main():
+    global verbose
+    args = get_args()
+    verbose = args.verbose
+    if args.func:
+        args.func(args)
+
+if __name__ == '__main__':
+	main()
+
