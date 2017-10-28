@@ -136,6 +136,7 @@ def main():
     global verbose
     args = get_args()
     verbose = args.verbose
+    args.submodules = [s.rstrip('/') for s in args.submodules]
     if args.func:
         args.func(args)
 
