@@ -85,13 +85,13 @@ def cmd_cache(args):
     path_re = re.compile('path = (?P<path>.+)')
     url_re = re.compile('url = (?P<url>.+)')
     name = ''
-    url = ''
-    path = ''
     with open('.gitmodules', 'r') as gitmodules:
         for line in gitmodules:
             match = re.search(name_re, line)
             if match:
                 name = match.group('name')
+                path = ''
+                url = ''
             match = re.search(path_re, line)
             if match:
                 path = match.group('path')
@@ -102,8 +102,6 @@ def cmd_cache(args):
                     path in args.submodules):
                 cache(args.cache_dir, name, url)
                 name = ''
-                url = ''
-                path = ''
 
 def update(cache_dir, sm_name, sm_path):
     cmd = ['git', 'submodule', 'update', '--init']
@@ -121,20 +119,18 @@ def cmd_update(args):
     name_re = re.compile('\[submodule "(?P<name>[^"]+)"')
     path_re = re.compile('path = (?P<path>.+)')
     name = ''
-    path = ''
     with open('.gitmodules', 'r') as gitmodules:
         for line in gitmodules:
             match = re.search(name_re, line)
             if match:
                 name = match.group('name')
+                path = ''
             match = re.search(path_re, line)
             if match:
                 path = match.group('path')
-
             if path and name and (not args.submodules or path in args.submodules):
                 update(args.cache_dir, name, path)
                 name = ''
-                path = ''
 
 def main():
     global verbose
