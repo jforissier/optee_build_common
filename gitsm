@@ -48,7 +48,8 @@ def get_args():
             'options and details.')
     parser_update.set_defaults(func=cmd_update)
     for subparser in [parser_cache, parser_update]:
-        subparser.add_argument('-c', '--cache-dir', default='../gitcache',
+        subparser.add_argument('-c', '--cache-dir',
+                default=os.path.expanduser('~/.gitsm_cache'),
                 help='Path to the cached Git repositories. Whem using the '
                 '\'cache\' command, the directory is created if it does not '
                 'exist. (default: %(default)s).')
