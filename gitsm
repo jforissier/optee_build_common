@@ -11,6 +11,10 @@ import re
 import subprocess
 
 verbose = False
+try:
+    default_cache_dir = os.environ['GITSM_CACHE_DIR']
+except:
+    default_cache_dir = os.path.expanduser('~/.gitsm_cache')
 
 def get_args():
     parser = argparse.ArgumentParser(description=''
@@ -35,23 +39,25 @@ def get_args():
             formatter_class=argparse.RawDescriptionHelpFormatter)
     subparsers = parser.add_subparsers()
     parser_cache = subparsers.add_parser('cache',
-            help='Create or update Git repositories under CACHE_DIR. This '
-            'command runs \'git clone  --bare <submodule remote URL> '
-            '<submodule name>\' in the cache directory, or simply '
-            '\'git fetch\' if the repository already exists. Use '
-            '\'gitsm cache -h\' for options and details.')
+            help='Create or update Git repositories under the cache '
+            'directory. This command runs '
+            '\'git clone  --bare <submodule remote URL> <submodule name>\''
+            ' in the cache directory, or simply \'git fetch\' if the '
+            'repository already exists. Use \'gitsm cache -h\' for options '
+            'and details.')
     parser_cache.set_defaults(func=cmd_cache)
     parser_update = subparsers.add_parser('update',
-            help='Checkout submodules. A cache under CACHE_DIR is used, if it '
+            help='Checkout submodules. A cache is used, if it '
             'exists. This command runs \'git submodule update --init '
             '[--reference <cached Git>]. Use \'gitsm update -h\' for '
             'options and details.')
     parser_update.set_defaults(func=cmd_update)
     for subparser in [parser_cache, parser_update]:
-        subparser.add_argument('-c', '--cache-dir', default='../gitcache',
+        subparser.add_argument('-c', '--cache-dir', default=default_cache_dir,
                 help='Path to the cached Git repositories. Whem using the '
                 '\'cache\' command, the directory is created if it does not '
-                'exist. (default: %(default)s).')
+                'exist. (default: ~/.gitsm_cache or $GITSM_CACHE_DIR if set, '
+                'current value: %(default)s).')
         subparser.add_argument('-v', '--verbose', action='store_true',
                 help='Print git commands as they are executed.')
         subparser.add_argument('submodules', metavar='submodule', type=str,
