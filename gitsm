@@ -60,6 +60,8 @@ def get_args():
                 'current value: %(default)s).')
         subparser.add_argument('-v', '--verbose', action='store_true',
                 help='Print git commands as they are executed.')
+        subparser.add_argument('-x', '--exclude', action='append', default=[],
+                help='Exclude submodule by path.')
         subparser.add_argument('submodules', metavar='submodule', type=str,
                 nargs='*', help='The paths (directory names) of the '
                 'submodule(s) to cache or update. If empty, all the submodules '
@@ -105,7 +107,7 @@ def cmd_cache(args):
             if match:
                 url = match.group('url')
             if name and url and path and (not args.submodules or
-                    path in args.submodules):
+                    path in args.submodules) and (not path in args.exclude):
                 cache(args.cache_dir, name, url)
                 name = ''
 
@@ -143,6 +145,7 @@ def main():
     args = get_args()
     verbose = args.verbose
     args.submodules = [s.rstrip('/') for s in args.submodules]
+    args.exclude = [s.rstrip('/') for s in args.exclude]
     if args.func:
         args.func(args)
 
