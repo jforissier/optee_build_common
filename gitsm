@@ -9,6 +9,7 @@ import argparse
 import os
 import re
 import subprocess
+import sys
 
 verbose = False
 try:
@@ -71,6 +72,7 @@ def get_args():
 def subprocess_call(cmd, cwd='.'):
     if verbose:
         print '[' + ' '.join(cmd) + ']'
+    sys.stdout.flush()
     subprocess.call(cmd, cwd=cwd)
 
 def cache(cache_dir, sm_name, sm_url):
