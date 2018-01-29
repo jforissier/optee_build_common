@@ -19,6 +19,7 @@ OPTEE_TEST_OUT_PATH		?= $(ROOT)/optee_test/out
 OPTEE_EXAMPLES_PATH		?= $(ROOT)/optee_examples
 BENCHMARK_APP_PATH		?= $(ROOT)/optee_benchmark
 LIBYAML_LIB_PATH		?= $(BENCHMARK_APP_PATH)/libyaml/out/lib
+TEE_STATS_PATH			?= $(ROOT)/tee-stats
 
 # default high verbosity. slow uarts shall specify lower if prefered
 CFG_TEE_CORE_LOG_LEVEL		?= 3
@@ -392,6 +393,17 @@ benchmark-app-clean-common:
 	$(MAKE) -C $(BENCHMARK_APP_PATH) clean
 
 ################################################################################
+# tee-stats client application
+################################################################################
+TEE_STATS_COMMON_FLAGS ?= CROSS_COMPILE=$(AARCH$(COMPILE_NS_USER)_CROSS_COMPILE)
+
+tee-stats-common: optee-os optee-client
+	$(MAKE) -C $(TEE_STATS_PATH) $(TEE_STATS_COMMON_FLAGS)
+
+tee-stats-clean-common:
+	$(MAKE) -C $(TEE_STATS_PATH) clean
+
+################################################################################
 # rootfs
 ################################################################################
 .PHONY: update_rootfs-common
@@ -442,6 +454,10 @@ filelist-tee-common: optee-client xtest optee-examples
 									>> $(fl); \
 		echo "file /lib/libyaml-0.so.2.0.5 $(LIBYAML_LIB_PATH)/libyaml-0.so.2.0.5 755 0 0" \
 									>> $(fl); \
+	fi
+	@if [ -e $(TEE_STATS_PATH)/out/tee-stats ]; then \
+		echo "file /bin/tee-stats" \
+			"$(TEE_STATS_PATH)/out/tee-stats 755 0 0 "	>> $(fl); \
 	fi
 	@if [ "$(QEMU_USERNET_ENABLE)" = "y" ]; then \
 		echo "slink /etc/rc.d/S02_udhcp_networking /etc/init.d/udhcpc 755 0 0" \
