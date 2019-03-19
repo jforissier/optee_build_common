@@ -429,6 +429,10 @@ filelist-tee-common: fl:=$(GEN_ROOTFS_FILELIST)
 filelist-tee-common: optee-client xtest optee-examples
 	@echo "# filelist-tee-common /start" 				> $(fl)
 	@echo "dir /lib/optee_armtz 755 0 0" 				>> $(fl)
+	@for file in $(OPTEE_OS_TA_DEV_KIT_DIR)/lib/*.ta; do \
+	                ([ -f "$$file" ] && echo "file /lib/optee_armtz/$$(basename $$file)" \
+	                "$$file 755 0 0" || true)                        >> $(fl); \
+	 done
 	@if [ -e $(OPTEE_EXAMPLES_PATH)/out/ca ]; then \
 		for file in $(OPTEE_EXAMPLES_PATH)/out/ca/*; do \
 			echo "file /usr/bin/$$(basename $$file)" \
