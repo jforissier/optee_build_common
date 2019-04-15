@@ -486,13 +486,6 @@ filelist-tee-common: optee-client xtest optee-examples
 									>> $(fl)
 	@echo "slink /lib/libteec.so.1 libteec.so.1.0 755 0 0"			>> $(fl)
 	@echo "slink /lib/libteec.so libteec.so.1 755 0 0" 			>> $(fl)
-	@if [ -e $(OPTEE_CLIENT_EXPORT)/lib/libsqlfs.so.1.0 ]; then \
-		echo "file /lib/libsqlfs.so.1.0" \
-			"$(OPTEE_CLIENT_EXPORT)/lib/libsqlfs.so.1.0 755 0 0" \
-									>> $(fl); \
-		echo "slink /lib/libsqlfs.so.1 libsqlfs.so.1.0 755 0 0" >> $(fl); \
-		echo "slink /lib/libsqlfs.so libsqlfs.so.1 755 0 0" 	>> $(fl); \
-	fi
 	@echo "file /etc/init.d/optee $(ROOT)/common/init.d.optee 755 0 0"	>> $(fl)
 	@echo "slink /etc/rc.d/S09_optee /etc/init.d/optee 755 0 0"	>> $(fl)
 	@echo "# filelist-tee-common /end"				>> $(fl)
