@@ -13,7 +13,7 @@ GEN_ROOTFS_PATH			?= $(ROOT)/gen_rootfs
 GEN_ROOTFS_FILELIST		?= $(GEN_ROOTFS_PATH)/filelist-tee.txt
 OPTEE_OS_PATH			?= $(ROOT)/optee_os
 OPTEE_CLIENT_PATH		?= $(ROOT)/optee_client
-OPTEE_CLIENT_EXPORT		?= $(OPTEE_CLIENT_PATH)/out/export
+OPTEE_CLIENT_EXPORT		?= $(OPTEE_CLIENT_PATH)/out/export/usr
 OPTEE_TEST_PATH			?= $(ROOT)/optee_test
 OPTEE_TEST_OUT_PATH		?= $(ROOT)/optee_test/out
 OPTEE_EXAMPLES_PATH		?= $(ROOT)/optee_examples
@@ -480,7 +480,7 @@ filelist-tee-common: optee-client xtest optee-examples
 									>> $(fl); \
 	fi
 	@echo "# OP-TEE Client" 					>> $(fl)
-	@echo "file /bin/tee-supplicant $(OPTEE_CLIENT_EXPORT)/bin/tee-supplicant 755 0 0" \
+	@echo "file /bin/tee-supplicant $(OPTEE_CLIENT_EXPORT)/sbin/tee-supplicant 755 0 0" \
 									>> $(fl)
 	@echo "file /lib/libteec.so.1.0 $(OPTEE_CLIENT_EXPORT)/lib/libteec.so.1.0 755 0 0" \
 									>> $(fl)
